@@ -114,8 +114,8 @@ Before beginning the installation, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/homelab-infra.git
-cd homelab-infra
+git clone https://github.com/evandcoleman/ansible-hashicorp-homelab.git
+cd ansible-hashicorp-homelab
 ```
 
 ### 2. Configure the Hosts File
