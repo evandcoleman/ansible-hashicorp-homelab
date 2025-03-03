@@ -179,24 +179,23 @@ Create an AWS KMS key and note the key ID.
 ### 5. Install Ansible Requirements
 
 ```bash
-cd bootstrap
-ansible-galaxy install -r requirements.yml
+make install
 ```
 
 ### 6. Run the Ansible Playbook
 
 ```bash
-ansible-playbook -i ../hosts.yml site.yml
+make deploy
 ```
 
 You can also run specific parts of the playbook using tags:
 
 ```bash
-# Just bootstrap the nodes
-ansible-playbook -i ../hosts.yml site.yml --tags bootstrap
-
 # Just set up Nomad
-ansible-playbook -i ../hosts.yml site.yml --tags nomad
+make nomad
+
+# Just set up Consul
+make consul
 ```
 
 ### 7. Access the Services
@@ -439,11 +438,10 @@ EOH
 ### Updating the Cluster
 
 ```bash
-# Update system packages
-ansible-playbook -i hosts.yml site.yml --tags bootstrap
-
 # Update Nomad/Consul/Vault
-ansible-playbook -i hosts.yml site.yml --tags nomad,consul,vault
+make nomad
+make consul
+make vault
 ```
 
 ### Checking Cluster Status
