@@ -120,7 +120,7 @@ cd ansible-hashicorp-homelab
 
 ### 2. Configure the Hosts File
 
-Edit the `package/hosts.yml` file to match your network configuration:
+Edit the `hosts.yml` file to match your network configuration:
 
 ```yaml
 # Example configuration
@@ -145,9 +145,9 @@ all:
 
 Edit the following files to match your environment:
 
-- `package/bootstrap/group_vars/all.yml`: Common settings
-- `package/bootstrap/group_vars/nomad_cluster.yml`: Nomad-specific settings
-- `package/bootstrap/group_vars/edge_nodes.yml`: Edge node settings
+- `bootstrap/group_vars/all.yml`: Common settings
+- `bootstrap/group_vars/nomad_cluster.yml`: Nomad-specific settings
+- `bootstrap/group_vars/edge_nodes.yml`: Edge node settings
 
 Key settings to update:
 
@@ -179,7 +179,7 @@ Create an AWS KMS key and note the key ID.
 ### 5. Install Ansible Requirements
 
 ```bash
-cd package/bootstrap
+cd bootstrap
 ansible-galaxy install -r requirements.yml
 ```
 
