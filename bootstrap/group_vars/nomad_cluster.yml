@@ -1,0 +1,68 @@
+---
+## Core
+nomad_debug: false
+
+### Nomad settings
+nomad_group_name: nomad_cluster
+nomad_version: 1.6.0
+nomad_datacenter: "homelab"
+nomad_region: "us-east-1"
+nomad_bootstrap_expect: 3
+nomad_raft_protocol: 3
+nomad_telemetry: true
+nomad_telemetry_disable_hostname: true
+nomad_telemetry_collection_interval: "1s"
+nomad_telemetry_publish_allocation_metrics: true
+nomad_telemetry_publish_node_metrics: true
+nomad_telemetry_prometheus_metrics: true
+nomad_allow_purge_config: true
+nomad_autopilot: true
+nomad_bind_address: 0.0.0.0
+nomad_host_networks:
+  - name: default
+    interface: "{{ vlan_interface }}"
+    reserved_ports:
+nomad_plugins:
+  raw_exec:
+    config:
+      enabled: true
+  docker:
+    config:
+      volumes:
+        enabled: true
+      allow_caps: ["NET_ADMIN", "CAP_CHOWN", "SYS_ADMIN"]
+      allow_privileged: true
+      extra_labels: ["job_name", "task_group_name", "task_name", "namespace", "node_name"]
+nomad_iface: "{{ vlan_interface }}"
+nomad_network_interface: "{{ vlan_interface }}"
+nomad_acl_enabled: true
+
+### Vault
+nomad_vault_enabled: true
+nomad_vault_address: "http://{{ network_address }}:8200"
+nomad_vault_token: "{{ vault_token }}"
+nomad_vault_tls_skip_verify: true
+nomad_vault_default_identity: "vault.io"
+nomad_vault_create_from_role: "nomad-workloads"
+
+vault_version: 1.14.0
+vault_consul: "{{ nomad_consul_address }}"
+vault_backend: "consul"
+vault_datacenter: "{{ nomad_datacenter }}"
+vault_cluster_name: "{{ nomad_datacenter }}"
+vault_iface: "{{ vlan_interface }}"
+vault_address: "{{ network_address }}"
+vault_awskms: true
+vault_awskms_key_id: "YOUR_AWS_KMS_KEY_ID"
+
+### Docker
+nomad_docker_enable: true
+
+### CNI
+nomad_cni_enable: true
+nomad_cni_dir: "/opt/cni/bin"
+nomad_cni_version: "{{ lookup('env','NOMAD_CNI_VERSION') | default('1.6.2', true) }}"
+nomad_cni_pkg: "cni-plugins-linux-{{nomad_architecture}}-v{{ nomad_cni_version }}.tgz"
+nomad_cni_url: "https://github.com/containernetworking/plugins/releases/download/v{{ nomad_cni_version }}"
+nomad_cni_zip_url: "{{ nomad_cni_url }}/{{ nomad_cni_pkg }}"
+nomad_cni_checksum_file_url: "{{ nomad_cni_zip_url }}.sha256" 

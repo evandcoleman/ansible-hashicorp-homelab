@@ -1,0 +1,49 @@
+### cloudflared
+cf_tunnels:
+  homelab-tunnel:
+    routes:
+      dns:
+        - "{{ inventory_hostname }}"
+        - "*.homelab.local"
+    account_tag: REPLACE_WITH_CLOUDFLARE_ACCOUNT_TAG
+    tunnel_secret: "{{ cloudflare_tunnel_secret }}"
+    tunnel_id: REPLACE_WITH_TUNNEL_ID
+    ingress:
+      - hostname: "{{ inventory_hostname }}.homelab.local"
+        service: "https://{{ network_address }}:443"
+      - hostname: "homelab.local"
+        service: "https://{{ network_address }}:443"
+        originRequest:
+          originServerName: "homelab.local"
+      - hostname: "*.homelab.local"
+        service: "https://{{ network_address }}:443"
+        originRequest:
+          originServerName: "*.homelab.local"
+      - hostname: "example.com"
+        service: "https://{{ network_address }}:443"
+        originRequest:
+          originServerName: "example.com"
+      - service: http_status:404
+
+### Consul Template
+consul_template_version: "0.39.1"
+consul_template_use_systemd: true
+consul_template_consul_server: "{{ network_address }}"
+consul_template_config_file_template: "{{ playbook_dir }}/files/consul-template.cfg.j2"
+consul_template_templates: 
+  - name: "caddy-template.ctmpl"
+    dest: "/etc/caddy/Caddyfile"
+    cmd: "systemctl reload caddy.service"
+consul_template_template_templates:
+  - src: "{{ playbook_dir }}/files/caddy-template.ctmpl.j2"
+    dest: "caddy-template.ctmpl"
+    cmd: "systemctl reload caddy.service"
+
+### Caddy
+caddy_config_update: false
+caddy_systemd_capabilities_enabled: true
+caddy_systemd_restart_startlimitinterval: "10"
+caddy_packages:
+  - github.com/caddy-dns/cloudflare
+  - github.com/pteich/caddy-tlsconsul
+  - github.com/greenpau/caddy-security 

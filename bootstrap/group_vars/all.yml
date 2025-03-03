@@ -1,0 +1,48 @@
+---
+ansible_user: admin
+ansible_password: REPLACE_WITH_YOUR_PASSWORD_HASH
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+dns_server_1: "127.0.0.1"
+dns_server_2: "1.1.1.1"
+dhcp_proxy: true
+host_key_checking: false
+username: admin
+github_ssh_key_url: "https://github.com/username.keys"
+network_gateway: "10.0.1.1"
+network_netmask: "255.255.255.0"
+vlan_id: 10
+vlan_interface: "{{ network_interface }}.{{ vlan_id }}"
+
+### Storage (Optional)
+# Uncomment and configure if using NFS storage
+# nfs_mount_address_external: "10.0.1.10"
+# nfs_mount_address_internal: "172.16.0.1"
+# nfs_mounts_list:
+#   - { local: "{{ nfs_mount_point }}/NAS/Cluster", src: "{{ nfs_mount_address }}:/volume1/Cluster" }
+#   - { local: "{{ nfs_mount_point }}/NAS/Media", src: "{{ nfs_mount_address }}:/volume1/Media" }
+
+### Consul
+consul_version: 1.16.0
+consul_connect_enabled: true
+consul_group_name: "all"
+consul_datacenter: "homelab"
+consul_domain: "homelab"
+consul_bootstrap_expect: true
+consul_bootstrap_expect_value: 3
+consul_raw_key: "REPLACE_WITH_GENERATED_KEY"
+consul_dnsmasq_enable: true
+nomad_use_consul: true
+nomad_consul_address: "{{ network_address }}:8500"
+consul_client_address: "{{ network_address }}"
+consul_advertise_address: "{{ network_address }}"
+consul_iface: "{{ vlan_interface }}"
+
+# Add gRPC configuration
+consul_config_custom:
+  addresses:
+    grpc: "{{ network_address }}"
+  ports:
+    grpc: 8502
+  connect:
+    enabled: true 

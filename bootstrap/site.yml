@@ -1,0 +1,63 @@
+---
+- hosts: 'nomad_cluster'
+  roles:
+    - role: setup-docker
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - docker
+
+    - role: setup-nomad
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - nomad
+
+    - role: setup-consul
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - consul
+
+    - role: setup-vault
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - vault
+
+  tasks:
+    - name: Reboot
+      become: true
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      tags:
+        - reboot
+      ansible.builtin.reboot:
+
+- hosts: 'edge_nodes'
+  roles:
+    - role: setup-consul
+      become: true
+      tags:
+        - consul
+
+    - role: setup-cloudflared
+      become: true
+      tags:
+        - cloudflared
+
+    - role: setup-consul-template
+      become: true
+      tags:
+        - consul-template
+
+    - role: setup-caddy
+      become: true
+      tags:
+        - caddy
+
+  # tasks:
+  #   - name: Reboot
+  #     become: true
+  #     tags:
+  #       - reboot
+  #     ansible.builtin.reboot: 

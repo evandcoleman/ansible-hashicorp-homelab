@@ -1,0 +1,154 @@
+<<- range services ->>
+    <<- range service .Name ->>
+        <<- if (.Tags | contains "caddy") ->>
+            <<- scratch.MapSetX "vhosts" .Name true ->>
+            <<- if .Tags | contains "public" >>
+                <<- scratch.MapSet "vhosts" .Name false ->>
+            <<- end ->>
+        <<- end ->>
+    <<- end ->>
+<<- end ->>
+{
+    http_port 80
+    https_port 443
+    acme_dns cloudflare {{ cloudflare_token }}
+    storage "consul" {
+        address "{{ network_address }}:8500"
+        prefix "caddytls"
+    }
+
+    order authenticate before respond
+
+    security {
+        ldap identity store homelab.local {
+            realm homelab.local
+            servers {
+                ldap://10.0.1.10:389
+            }
+            attributes {
+                name displayName
+                surname sn
+                username uid
+                member_of memberOf
+                email mail
+            }
+            username "uid=root,cn=users,dc=homelab,dc=local"
+            password "REPLACE_WITH_LDAP_PASSWORD"
+            search_base_dn "dc=homelab,dc=local"
+            search_filter "(uid=%s)"
+            groups {
+                "cn=users,cn=groups,dc=homelab,dc=local" user
+            }
+        }
+
+        local identity store localdb {
+            realm local
+            path /data/caddy/users.json
+        }
+
+        authentication portal myportal {
+            crypto default token lifetime 2592000
+            crypto key sign-verify REPLACE_WITH_CRYPTO_KEY
+            enable identity store homelab.local
+            enable identity store localdb
+            cookie domain homelab.local
+            ui {
+                logo url "https://example.com/logo.png"
+                logo description "Homelab"
+            }
+            transform user {
+				match origin local
+				action add role user
+				ui link "Portal Settings" /settings icon "las la-cog"
+			}
+        }
+
+        authorization policy mypolicy {
+            set auth url https://auth.homelab.local/
+            crypto key verify REPLACE_WITH_CRYPTO_KEY
+            allow roles user
+            validate bearer header
+            inject headers with claims
+            bypass uri prefix /api
+            bypass uri prefix /jsonrpc
+            bypass uri prefix /media
+            with api key auth portal myportal realm local
+        }
+    }
+}
+
+(trusted_proxy_list) {
+    trusted_proxies 10.0.1.0/24 10.0.2.0/24 fc00::/7
+}
+
+https://auth.homelab.local {
+    route {
+        authenticate with myportal
+    }
+
+    tls {
+        dns cloudflare {{ cloudflare_token }}
+    }
+}
+
+https://*.homelab.local {
+<< range $vhost, $private := scratch.Get "vhosts" >>
+    @<< $vhost >> host << $vhost >>.homelab.local
+    handle @<< $vhost >> {
+<<- if $private >>
+        @blocked not remote_ip 10.0.1.0/24
+        respond @blocked "Access denied" 403
+<<- end >>
+
+<<- range services >>
+        <<- range service .Name >>
+            <<- if (and (.Tags | contains "caddy") (eq .Name $vhost)) >>
+                <<- if index .ServiceMeta "path" >>
+        reverse_proxy << index .ServiceMeta "path" >> http://<< .Address >>:<< .Port >> {
+                <<- else >>
+        reverse_proxy http://<< .Address >>:<< .Port >> {
+                <<- end >>
+            import trusted_proxy_list
+            header_up Host {http.request.host}
+        }
+
+                # Create a proxy entry for the Connect sidecar if it exists
+                <<- $proxyName := printf "connect-proxy-%s" .Name >>
+                <<- range service $proxyName >>
+    @<< $vhost >>-sidecar-proxy host << $vhost >>-sidecar-proxy.homelab.local
+    handle @<< $vhost >>-sidecar-proxy {
+        reverse_proxy http://<< .Address >>:<< .Port >> {
+            import trusted_proxy_list
+            header_up Host {http.request.host}
+        }
+    }
+                <<- end >>
+            <<- end >>
+        <<- end >>
+    <<- end >>
+    }
+<< end >>
+
+    handle {
+        abort
+    }
+
+    tls {
+        dns cloudflare {{ cloudflare_token }}
+    }
+}
+
+# Add a separate block for example.com
+https://example.com {
+    <<- range service "web-app" >>
+    reverse_proxy http://<< .Address >>:<< .Port >> {
+        import trusted_proxy_list
+        header_up Host {http.request.host}
+    }
+    <<- break >>
+    <<- end >>
+
+    tls {
+        dns cloudflare {{ cloudflare_token }}
+    }
+} 

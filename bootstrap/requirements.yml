@@ -1,0 +1,12 @@
+- name: setup-nomad
+  src: https://github.com/username/ansible-nomad.git
+- name: setup-consul
+  src: https://github.com/ansible-community/ansible-consul.git
+- name: setup-vault
+  src: https://github.com/ansible-community/ansible-vault.git
+- name: setup-caddy
+  src: https://github.com/caddy-ansible/caddy-ansible
+- name: setup-consul-template
+  src: https://github.com/griggheo/ansible-consul-template
+- name: setup-cloudflared
+  src: https://github.com/username/ansible-role-cloudflared 
